@@ -1,56 +1,63 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as doctorService from "../services/doctor.service";
-
 
 export const createDoctor = async (
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction,
 ) => {
   try {
-    const {
-      name,
-      specialization,
-      email,
-      phone
-    } = req.body;
-
-    const result =
-      await doctorService.createDoctor(
-        name,
-        specialization,
-        email,
-        phone
-      );
-
-    res.status(201).json({
-      message: "Doctor created",
-      result
-    });
+    res.status(201).json(await doctorService.createDoctor(req.body));
   } catch (error) {
-    res.status(500).json({
-      message: "Something went wrong"
-    });
+    next(error);
   }
 };
 
 export const getDoctors = async (
-  req: Request,
-  res: Response
+  _req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-  const doctors =
-    await doctorService.getAllDoctors();
-
-  res.json(doctors);
+  try {
+    res.json(await doctorService.getAllDoctors());
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getDoctor = async (
   req: Request,
-  res: Response
+  res: Response,
+  next: NextFunction,
 ) => {
-  const id = Number(req.params.id);
+  try {
+    res.json(await doctorService.getDoctorById(Number(req.params.id)));
+  } catch (error) {
+    next(error);
+  }
+};
 
-  const doctor =
-    await doctorService.getDoctorById(id);
+export const updateDoctor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.json(await doctorService.updateDoctor(Number(req.params.id), req.body));
+  } catch (error) {
+    next(error);
+  }
+};
 
-  res.json(doctor);
+export const deleteDoctor = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    await doctorService.deleteDoctor(Number(req.params.id));
+    res.json({ message: "Doctor deleted" });
+  } catch (error) {
+    next(error);
+  }
 };

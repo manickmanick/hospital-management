@@ -1,11 +1,22 @@
 import { z } from "zod";
+import { idParamsSchema } from "./common.validator";
 
-export const createAppointmentSchema = z.object({
-  patientId: z.number().int().positive(),
+export const appointmentStatusSchema = z.enum([
+  "SCHEDULED",
+  "COMPLETED",
+  "CANCELLED",
+]);
 
-  doctorId: z.number().int().positive(),
+export const createAppointmentRequestSchema = {
+  body: z.object({
+    patientId: z.number().int().positive(),
+    doctorId: z.number().int().positive(),
+    appointmentDate: z.iso.datetime({ offset: true }),
+    reason: z.string().trim().max(1000).nullable().optional(),
+  }),
+};
 
-  appointmentDate: z.string().datetime(),
-});
-
-export type CreateAppointmentDto = z.infer<typeof createAppointmentSchema>;
+export const updateAppointmentStatusRequestSchema = {
+  params: idParamsSchema,
+  body: z.object({ status: appointmentStatusSchema }),
+};

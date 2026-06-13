@@ -1,22 +1,18 @@
 import { z } from "zod";
+import { idParamsSchema } from "./common.validator";
 
-export const createDoctorSchema = z.object({
-  name: z
-    .string()
-    .min(3),
-
-  specialization: z
-    .string()
-    .min(2),
-
-  email: z
-    .email(),
-
-  phone: z
-    .string()
-    .min(10)
-    .max(15)
+const doctorBodySchema = z.object({
+  name: z.string().trim().min(3).max(100),
+  specialization: z.string().trim().min(2).max(100),
+  licenseNumber: z.string().trim().min(2).max(100),
+  email: z.email(),
+  phone: z.string().trim().min(10).max(20),
 });
 
-export type CreateDoctorDto =
-  z.infer<typeof createDoctorSchema>;
+export const createDoctorRequestSchema = { body: doctorBodySchema };
+export const updateDoctorRequestSchema = {
+  params: idParamsSchema,
+  body: doctorBodySchema.partial().refine((value) => Object.keys(value).length, {
+    message: "At least one field is required",
+  }),
+};

@@ -1,27 +1,34 @@
-// src/middlewares/validate.ts
+import { NextFunction, Request, Response } from "express";
+import { ZodType } from "zod";
 
-import { Request, Response, NextFunction } from "express";
-import { ZodSchema } from "zod";
+export type RequestSchema = {
+  body?: ZodType;
+  params?: ZodType;
+  query?: ZodType;
+};
 
 export const validate =
-  (schema: ZodSchema) =>
-  (
-    req: Request,
-    res: Response,
-    next: NextFunction
-  ) => {
-    const result = schema.safeParse(req.body);
+  (schema: RequestSchema) =>
+  (req: Request, res: Response, next: NextFunction) => {
+    const targets = ["body", "params", "query"] as const;
 
-    if (!result.success) {
-      return res.status(400).json({
-        errors: result.error.issues.map(issue => ({
-          field: issue.path.join("."),
-          message: issue.message
-        }))
-      });
+    for (const target of targets) {
+      const validator = schema[target];
+      if (!validator) continue;
+
+      const result = validator.safeParse(req[target]);
+      if (!result.success) {
+        return res.status(400).json({
+          message: "Validation failed",
+          errors: result.error.issues.map((issue) => ({
+            field: [target, ...issue.path].join("."),
+            message: issue.message,
+          })),
+        });
+      }
+
+      (req as any)[target] = result.data;
     }
-
-    req.body = result.data;
 
     next();
   };

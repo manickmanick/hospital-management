@@ -1,49 +1,76 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as appointmentService from "../services/appointment.service";
 
-export const createAppointment = async (req: Request, res: Response) => {
-  const { patientId, doctorId, appointmentDate } = req.body;
-  console.log("req.body -> ", req.body);
-
-  const result = await appointmentService.createAppointment(
-    patientId,
-    doctorId,
-    appointmentDate,
-  );
-
-  res.status(201).json(result);
+export const createAppointment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res
+      .status(201)
+      .json(await appointmentService.createAppointment(req.body, req.user!));
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getAppointments = async (req: Request, res: Response) => {
-  const appointments = await appointmentService.getAllAppointments();
-
-  res.json(appointments);
+export const getAppointments = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.json(await appointmentService.getAllAppointments(req.user!));
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const getAppointment = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  const appointment = await appointmentService.getAppointmentById(id);
-
-  res.json(appointment);
+export const getAppointment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.json(
+      await appointmentService.getAppointmentById(
+        Number(req.params.id),
+        req.user!,
+      ),
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const updateAppointmentStatus = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  const { status } = req.body;
-
-  const result = await appointmentService.updateAppointmentStatus(id, status);
-
-  res.json(result);
+export const updateAppointmentStatus = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.json(
+      await appointmentService.updateAppointmentStatus(
+        Number(req.params.id),
+        req.body.status,
+        req.user!,
+      ),
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 
-export const deleteAppointment = async (req: Request, res: Response) => {
-  const id = Number(req.params.id);
-
-  await appointmentService.deleteAppointment(id);
-
-  res.json({
-    message: "Appointment deleted",
-  });
+export const deleteAppointment = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    await appointmentService.deleteAppointment(Number(req.params.id));
+    res.json({ message: "Appointment deleted" });
+  } catch (error) {
+    next(error);
+  }
 };

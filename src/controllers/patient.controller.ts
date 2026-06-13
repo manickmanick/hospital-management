@@ -1,53 +1,77 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import * as patientService from "../services/patient.service";
 
 export const getPatients = async (
-    req: Request,
-    res: Response
+  _req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-    const patients =
-        await patientService.getAllPatients();
-
-    res.json(patients);
+  try {
+    res.json(await patientService.getAllPatients());
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const getPatient = async (
-    req: Request,
-    res: Response
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-    const id = Number(req.params.id);
+  try {
+    res.json(await patientService.getPatientById(Number(req.params.id)));
+  } catch (error) {
+    next(error);
+  }
+};
 
-    const patient =
-        await patientService.getPatientById(id);
-
-    res.json(patient);
+export const getPatientHistory = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.json(await patientService.getPatientHistory(Number(req.params.id)));
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const createPatient = async (
-    req: Request,
-    res: Response
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-    const { name, age, phone } = req.body;
+  try {
+    res.status(201).json(await patientService.createPatient(req.body));
+  } catch (error) {
+    next(error);
+  }
+};
 
-    const result =
-        await patientService.createPatient(
-            name,
-            age,
-            phone
-        );
-
-    res.status(201).json(result);
+export const updatePatient = async (
+  req: Request,
+  res: Response,
+  next: NextFunction,
+) => {
+  try {
+    res.json(
+      await patientService.updatePatient(Number(req.params.id), req.body),
+    );
+  } catch (error) {
+    next(error);
+  }
 };
 
 export const deletePatient = async (
-    req: Request,
-    res: Response
+  req: Request,
+  res: Response,
+  next: NextFunction,
 ) => {
-    const id = Number(req.params.id);
-
-    await patientService.deletePatient(id);
-
-    res.json({
-        message: "Patient deleted"
-    });
+  try {
+    await patientService.deletePatient(Number(req.params.id));
+    res.json({ message: "Patient deleted" });
+  } catch (error) {
+    next(error);
+  }
 };

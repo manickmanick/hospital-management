@@ -1,24 +1,54 @@
 import { Router } from "express";
-import { validate } from "../middlewares/validate";
 import {
   createAppointment,
-  getAppointments,
-  getAppointment,
-  updateAppointmentStatus,
   deleteAppointment,
+  getAppointment,
+  getAppointments,
+  updateAppointmentStatus,
 } from "../controllers/appointment.controller";
-import { createAppointmentSchema } from "../validators/appointment.validator";
+import { authorize } from "../middlewares/auth";
+import { validate } from "../middlewares/validate";
+import {
+  createAppointmentRequestSchema,
+  updateAppointmentStatusRequestSchema,
+} from "../validators/appointment.validator";
+import {
+  emptyBodySchema,
+  emptyQuerySchema,
+  idParamsSchema,
+} from "../validators/common.validator";
 
 const router = Router();
 
-router.post("/", validate(createAppointmentSchema), createAppointment);
-
-router.get("/", getAppointments);
-
-router.get("/:id", getAppointment);
-
-router.patch("/:id/status", updateAppointmentStatus);
-
-router.delete("/:id", deleteAppointment);
+router.use(authorize("ADMIN", "DOCTOR"));
+router.post(
+  "/",
+  validate({ ...createAppointmentRequestSchema, query: emptyQuerySchema }),
+  createAppointment,
+);
+router.get("/", validate({ query: emptyQuerySchema }), getAppointments);
+router.get(
+  "/:id",
+  validate({ params: idParamsSchema, query: emptyQuerySchema }),
+  getAppointment,
+);
+router.patch(
+  "/:id/status",
+  validate({
+    ...updateAppointmentStatusRequestSchema,
+    query: emptyQuerySchema,
+  }),
+  updateAppointmentStatus,
+);
+router.delete(
+  "/:id",
+  authorize("ADMIN"),
+  validate({
+    params: idParamsSchema,
+    body: emptyBodySchema,
+    query: emptyQuerySchema,
+  }),
+  deleteAppointment,
+);
 
 export default router;

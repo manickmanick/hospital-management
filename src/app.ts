@@ -1,30 +1,38 @@
-import { Client } from 'pg';
-import AWS from 'aws-sdk';
-AWS.config.update({ region: 'ap-southeast-2' });
+import "dotenv/config";
+import cors from "cors";
+import express, { NextFunction, Request, Response } from "express";
+import multer from "multer";
+import routes from "./routes";
+import { AppError } from "./utils/app-error";
 
-async function main(): Promise<void> {
-  let password: string = '';
-  const signer = new (AWS as any).RDS.Signer({ region: 'ap-southeast-2', hostname: 'database-1.cluster-cti6quksmsj5.ap-southeast-2.rds.amazonaws.com', port: 5432, username: 'postgres' });
-  password = signer.getAuthToken({});
+const app = express();
 
-  const client = new Client({
-    host: 'some host',
-    port: 5432,
-    database: 'postgres',
-    user: 'postgres',
-    password,
-    ssl: { rejectUnauthorized: false }
-  });
+app.use(cors());
+app.use(express.json({ limit: "1mb" }));
+app.use(express.urlencoded({ extended: true }));
+app.use("/api", routes);
 
-  try {
-    await client.connect();
-    const res = await client.query('SELECT version()');
-    console.log(res.rows[0].version);
-  } catch (error) {
-    console.error('Database error:', error);
-    throw error;
-  } finally {
-    await client.end();
-  }
-}
-main().catch(console.error);
+app.use((_req, _res, next) => {
+  next(new AppError(404, "Route not found"));
+});
+
+app.use(
+  (error: unknown, _req: Request, res: Response, _next: NextFunction) => {
+    const status =
+      error instanceof AppError
+        ? error.status
+        : error instanceof multer.MulterError
+          ? 400
+          : 500;
+    const message =
+      error instanceof Error ? error.message : "Internal server error";
+
+    if (status >= 500) {
+      console.error(error);
+    }
+
+    res.status(status).json({ message });
+  },
+);
+
+export default app;
