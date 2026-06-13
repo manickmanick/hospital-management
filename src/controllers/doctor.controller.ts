@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import * as doctorService from "../services/doctor.service";
 
+
 export const createDoctor = async (
   req: Request,
   res: Response

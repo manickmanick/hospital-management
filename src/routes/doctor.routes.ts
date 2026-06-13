@@ -1,4 +1,6 @@
 import { Router } from "express";
+import { createDoctorSchema } from "../validators/doctor.validator";
+import { validate } from "../middlewares/validate";
 
 import {
   createDoctor,
@@ -8,7 +10,7 @@ import {
 
 const router = Router();
 
-router.post("/", createDoctor);
+router.post("/", validate(createDoctorSchema), createDoctor);
 
 router.get("/", getDoctors);
 
